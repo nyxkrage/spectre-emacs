@@ -1,0 +1,32 @@
+#+title: Spectre Password Manager for Emacs
+#+AUTHOR: Carsten Kragelund
+The [[spectre.app/][Spectre Password Manager]] for Emacs *derive, don't store*
+
+* Requirements
+
+- [[https://github.com/nyxkrage/spectre-lib/][libspectre library]]
+- meson
+- ninja
+- c compiler
+
+* Installation
+
+1. Build the native module
+
+#+BEGIN_SRC
+meson setup build --prefix $PWD --libdir $PWD
+cd build
+ninja install
+#+END_SRC
+
+2. Add the plugin to your load-path
+
+#+BEGIN_SRC
+(add-to-list 'load-path /path/to/spectre-emacs)
+(require 'spectre)
+#+END_SRC
+
+* Usage
+
+1. Set ~spectre-master-password~ and ~spectre-full-name~ or let it prompt upon the first attempt to generate a password
+2. Call the ~spectre-password~ function ~M-x spectre-password~ and enter the approriate information
