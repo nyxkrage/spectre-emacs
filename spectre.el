@@ -29,7 +29,7 @@
   "The master password used when generating passwords."
   :type 'string
   :group 'spectre)
-(defcustom spectre-full-name (if (boundp 'user-full-name) user-full-name nil)
+(defcustom spectre-full-name (if (boundp 'user-full-name) user-full-name "")
   "The name used when generating passwords defaults to `user-full-name`."
   :type 'string
   :group 'spectre)
@@ -73,49 +73,59 @@
   (erase-buffer)
   (remove-overlays)
   (widget-insert "Spectre Password Manager\n\n")
-  (widget-create 'editable-field
-                 :format "  Full Name: %v \n"
-                 :size 30
-                 :value spectre-full-name
-                 :notify (lambda (widget &rest _) (setq spectre-full-name (widget-value widget))))
-  (widget-create 'editable-field
-                 :format "  Master Password: %v \n"
-                 :size 30
-                 :value spectre-master-password
-                 :secret (and (not show-master-password) ?*)
-                 :notify (lambda (widget &rest _) (setq spectre-master-password (widget-value widget))))
-  (widget-create 'push-button
-                 :format "    %[%t%] \n\n"
-                 :value (concat (if show-master-password "Hide" "Show") " Master Password")
-                 :notify (lambda (&rest _)
-                           (cancel-timer spectre-debounce-timer__internal)
-                           (spectre-buffer__internal buf show-password (not show-master-password) site-name (point))))
-  (let (password-widget)
-    (widget-create 'editable-field
-                   :format "  Site: %v \n"
-                   :size 30
-                   :value (or site-name "")
-                   :notify (lambda (widget &rest _)
-                             (setq site-name (widget-value widget))
-                             (spectre-render-password__internal password-widget site-name show-password)))
+  (let (password-widget
+        master-password-widget
+        name-widget
+        site-widget)
+    (setq name-widget
+          (widget-create 'editable-field
+                         :format "  Full Name: %v \n"
+                         :size 30
+                         :value spectre-full-name
+                         :notify (lambda (widget &rest _) (setq spectre-full-name (widget-value widget)))))
+    (setq master-password-widget
+          (widget-create 'editable-field
+                         :format "  Master Password: %v \n"
+                         :size 30
+                         :value spectre-master-password
+                         :secret (and (not show-master-password) ?*)
+                         :notify (lambda (widget &rest _) (setq spectre-master-password (widget-value widget)))))
+    (widget-create 'push-button
+                   :format "    %[%t%] \n\n"
+                   :value (concat (if show-master-password "Hide" "Show") " Master Password")
+                   :notify (lambda (&rest _)
+                             (cancel-timer spectre-debounce-timer__internal)
+                             (spectre-buffer__internal buf show-password (not show-master-password) site-name (point))))
+    (setq site-widget
+          (widget-create 'editable-field
+                         :format "  Site: %v \n"
+                         :size 30
+                         :value (or site-name "")
+                         :notify (lambda (widget &rest _)
+                                   (setq site-name (widget-value widget))
+                                   (spectre-render-password__internal password-widget site-name show-password))))
     (setq password-widget
           (widget-create 'item
                          :value (if show-password (spectre-password__internal site-name)
-                                  (make-string (length (spectre-password__internal site-name)) ?*)))))
-  (widget-create 'push-button
-                 :format "    %[%t%] "
-                 :value "Copy Password"
-                 :notify (lambda (&rest _)
-                           (kill-new (spectre-make-password spectre-full-name spectre-master-password site-name))))
-  (widget-create 'push-button
-                 :format " %[%t%] \n\n"
-                 :value (concat (if show-password "Hide" "Show") " Password")
-                 :notify (lambda (&rest _)
-                           (cancel-timer spectre-debounce-timer__internal)
-                           (spectre-buffer__internal buf (not show-password) show-master-password site-name (point))))
-  (widget-setup)
-  (use-local-map widget-keymap)
-  (goto-char (or point 10)))
+                                  (make-string (length (spectre-password__internal site-name)) ?*))))
+    (widget-create 'push-button
+                   :format "    %[%t%] "
+                   :value "Copy Password"
+                   :notify (lambda (&rest _)
+                             (kill-new (spectre-make-password spectre-full-name spectre-master-password site-name))))
+    (widget-create 'push-button
+                   :format " %[%t%] \n\n"
+                   :value (concat (if show-password "Hide" "Show") " Password")
+                   :notify (lambda (&rest _)
+                             (cancel-timer spectre-debounce-timer__internal)
+                             (spectre-buffer__internal buf (not show-password) show-master-password site-name (point))))
+    (widget-setup)
+    (use-local-map widget-keymap)
+    (unless spectre-full-name
+      (setq point (widget-field-start name-widget)))
+    (unless spectre-master-password
+      (setq point (widget-field-start master-password-widget)))
+    (goto-char (or point (widget-field-start site-widget)))))
 
 
 (defun spectre-render-password__internal (widget site show)
