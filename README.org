@@ -1,6 +1,6 @@
 #+title: Spectre Password Manager for Emacs
 #+AUTHOR: Carsten Kragelund
-The [[spectre.app/][Spectre Password Manager]] for Emacs *derive, don't store*
+The [[https://spectre.app/][Spectre Password Manager]] for Emacs *derive, don't store*
 
 * Requirements
 
